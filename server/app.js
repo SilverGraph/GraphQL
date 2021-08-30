@@ -1,8 +1,23 @@
 const express = require('express')
 const { graphqlHTTP } = require('express-graphql')
 const schema = require('./schema/schema')
+const mongoose = require('mongoose')
 
 const app = express()
+
+// CONNECT TO MONGODB
+mongoose.connect('mongodb+srv://raj-aryan:RajAryan@cluster0.tpzwd.mongodb.net/gql-ninja?retryWrites=true&w=majority', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+// This function allows to check successful connection to DB
+mongoose.connection.once('open', () => {
+  console.log('Connected to DB');
+})
+
+
+
+
 
 app.use('/graphql', graphqlHTTP({
   schema: schema,

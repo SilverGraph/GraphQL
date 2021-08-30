@@ -6,7 +6,8 @@ const {
   GraphQLString,
   GraphQLSchema,
   GraphQLID,
-  GraphQLInt
+  GraphQLInt,
+  GraphQLList
 } = graphql
 
 
@@ -15,9 +16,12 @@ const {
 
 // DUMMY DATA
 let books = [
-  {name: 'Name of the wind', genre: 'Fantasy', id: '1'},
-  {name: 'The Final Empire', genre: 'Fantasy', id: '2'},
-  {name: 'The Long Earth', genre: 'Sci-Fi', id: '3'}
+  {name: 'Name of the wind', genre: 'Fantasy', id: '1', authorid: '1'},
+  {name: 'The Final Empire', genre: 'Fantasy', id: '2', authorid: '2'},
+  {name: 'The Long Earth', genre: 'Sci-Fi', id: '3', authorid: '3'},
+  {name: 'The Hero of Ages', genre: 'Fantasy', id: '4', authorid: '2'},
+  {name: 'The Color of Magic', genre: 'Fantasy', id: '5', authorid: '3'},
+  {name: 'The Light Fantastic', genre: 'Fantasy', id: '6', authorid: '3'}
 ]
 
 let authors = [
@@ -35,16 +39,38 @@ const BookType = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
-    genre: { type: GraphQLString }
+    genre: { type: GraphQLString },
+    author: {
+      type: AuthorType,
+      // parent represents the BOOK data that was requested
+      resolve(parent, args) {
+        // console.log(parent);
+        return _.find(authors, { id: parent.authorid })
+      }
+    }
   })
 })
+
+/*
+  The reason why fields is a function and not a normal object
+  because the book and author objects are connected and should
+  be executed asynchronously. Hence when the rest of the code
+  is executed/ready the fields prop is executed after and it
+  knows what AuthorType and BookType are.
+*/
 
 const AuthorType = new GraphQLObjectType({
   name: 'Author',
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
-    age: { type: GraphQLInt }
+    age: { type: GraphQLInt },
+    books: {
+      type: new GraphQLList(BookType), // not BOOKTYPE because it denotes a single book while an author can have a list of books
+      resolve(parent, args) {
+        return _.filter(books, { authorid: parent.id })
+      }
+    }
   })
 })
 
@@ -60,8 +86,8 @@ const RootQuery = new GraphQLObjectType({
       args: { id: { type: GraphQLID } },
       resolve(parent, args) {
         // CODE TO GET DATA FROM DB OR OTHER SOURCE
-        // console.log(typeof(args.id));
         return _.find(books, { id: args.id })
+        // console.log(typeof(args.id));
       }
     },
     author: {
@@ -70,9 +96,25 @@ const RootQuery = new GraphQLObjectType({
       resolve(parent, args) {
         return _.find(authors, { id: args.id })
       }
+    },
+    books: {
+      type: new GraphQLList(BookType),
+      resolve(parent, args) {
+        return books
+      }
+    },
+    authors: {
+      type: new GraphQLList(AuthorType),
+      resolve(parent, args) {
+        return authors
+      }
     }
   }
 })
+
+
+
+
 
 module.exports = new GraphQLSchema({
   query: RootQuery
