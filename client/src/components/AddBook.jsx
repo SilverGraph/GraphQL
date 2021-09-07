@@ -37,10 +37,10 @@ function AddBook() {
       addTodo({ variables: {
           name: val.name,
           genre: val.genre,
-          authorid: val.authorid
+          authorId: val.authorid
         }
       })
-      // console.log(addTodo)
+      // console.log(val)
       
     }}>
 
